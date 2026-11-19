@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+    <display-name>Web Programming Homework Day 4</display-name>
+    <session-config>
+        <session-timeout>30</session-timeout>
+        <tracking-mode>COOKIE</tracking-mode>
+        <cookie-config><http-only>true</http-only></cookie-config>
+    </session-config>
+    <filter>
+        <filter-name>requestEncodingFilter</filter-name>
+        <filter-class>vn.iotstar.filter.RequestEncodingFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>authenticationFilter</filter-name>
+        <filter-class>vn.iotstar.filter.AuthenticationFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>siteMeshFilter</filter-name>
+        <filter-class>org.sitemesh.config.ConfigurableSiteMeshFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>requestEncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>authenticationFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>siteMeshFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+</web-app>

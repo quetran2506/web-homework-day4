@@ -1,0 +1,11 @@
+target/
+uploads/
+*.log
+.idea/
+.vscode/settings.json
+.vscode/launch.json
+.env
+/Cấu hình và test JPA.docx
+/Hướng dẫn CRUD với JPA3.docx
+*.docx
+*.pdf

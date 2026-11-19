@@ -1,0 +1,31 @@
+<%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:url value="/assets/styles.css" var="stylesUrl" />
+<c:url value="/home" var="homeUrl" />
+<c:url value="/admin/category/list" var="categoryUrl" />
+<c:url value="/video" var="videoUrl" />
+<c:url value="/video/manage" var="manageVideosUrl" />
+<c:url value="/login" var="loginUrl" />
+<c:url value="/register" var="registerUrl" />
+<header class="topbar">
+    <a class="brand" href="${homeUrl}">Web Homework</a>
+    <nav class="nav-links" aria-label="&#272;i&#7873;u h&#432;&#7899;ng ch&#237;nh">
+        <a href="${homeUrl}">Trang ch&#7911;</a>
+        <a href="${categoryUrl}">Danh m&#7909;c</a>
+        <a href="${videoUrl}">Video</a>
+        <c:choose>
+            <c:when test="${sessionScope.account != null}">
+                <span>Xin ch&#224;o, <c:out value="${sessionScope.account.fullName}" /></span>
+                <a href="${manageVideosUrl}">Qu&#7843;n l&#253; video</a>
+                <c:url value="/logout" var="logoutUrl" />
+                <form action="${logoutUrl}" method="post">
+                    <button class="link-button" type="submit">&#272;&#259;ng xu&#7845;t</button>
+                </form>
+            </c:when>
+            <c:otherwise>
+                <a href="${loginUrl}">&#272;&#259;ng nh&#7853;p</a>
+                <a href="${registerUrl}">&#272;&#259;ng k&#253;</a>
+            </c:otherwise>
+        </c:choose>
+    </nav>
+</header>
