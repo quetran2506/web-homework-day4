@@ -39,6 +39,15 @@ public class User implements Serializable {
     @Column(name = "phone", length = 32)
     private String phone;
 
+    @Column(name = "profile_image_url", length = 1000)
+    private String profileImageUrl;
+
+    @Column(name = "cloudinary_public_id", length = 255)
+    private String cloudinaryPublicId;
+
+    @Column(name = "pending_email", length = 255)
+    private String pendingEmail;
+
     @Column(name = "role_id", nullable = false)
     private int roleId = 5;
 
@@ -74,6 +83,12 @@ public class User implements Serializable {
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+    public String getProfileImageUrl() { return profileImageUrl; }
+    public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
+    public String getCloudinaryPublicId() { return cloudinaryPublicId; }
+    public void setCloudinaryPublicId(String cloudinaryPublicId) { this.cloudinaryPublicId = cloudinaryPublicId; }
+    public String getPendingEmail() { return pendingEmail; }
+    public void setPendingEmail(String pendingEmail) { this.pendingEmail = pendingEmail; }
     public int getRoleId() { return roleId; }
     public void setRoleId(int roleId) { this.roleId = roleId; }
     public boolean isActive() { return active; }

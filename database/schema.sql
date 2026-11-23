@@ -27,18 +27,29 @@ BEGIN
         full_name NVARCHAR(120) NOT NULL,
         password_hash NVARCHAR(255) NOT NULL,
         phone NVARCHAR(32) NULL,
+        profile_image_url NVARCHAR(1000) NULL,
+        cloudinary_public_id NVARCHAR(255) NULL,
+        pending_email NVARCHAR(255) NULL,
         role_id INT NOT NULL CONSTRAINT DF_Users_Role DEFAULT (5),
         IsActive BIT NOT NULL CONSTRAINT DF_Users_IsActive DEFAULT (1),
         created_at DATETIME2(0) NOT NULL,
         CONSTRAINT UQ_Users_Email UNIQUE (email),
         CONSTRAINT UQ_Users_Username UNIQUE (username)
     );
-END;
+END
 ELSE IF COL_LENGTH(N'dbo.Users', N'IsActive') IS NULL
 BEGIN
     ALTER TABLE dbo.Users ADD IsActive BIT NOT NULL
         CONSTRAINT DF_Users_IsActive DEFAULT (1) WITH VALUES;
-END;
+END
+GO
+
+IF COL_LENGTH(N'dbo.Users', N'profile_image_url') IS NULL
+    ALTER TABLE dbo.Users ADD profile_image_url NVARCHAR(1000) NULL;
+IF COL_LENGTH(N'dbo.Users', N'cloudinary_public_id') IS NULL
+    ALTER TABLE dbo.Users ADD cloudinary_public_id NVARCHAR(255) NULL;
+IF COL_LENGTH(N'dbo.Users', N'pending_email') IS NULL
+    ALTER TABLE dbo.Users ADD pending_email NVARCHAR(255) NULL;
 GO
 
 -- Convert a pre-existing non-Unicode name column so Vietnamese names remain intact.
@@ -109,6 +120,7 @@ BEGIN
         OtpId BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_OneTimeCodes PRIMARY KEY,
         UserId INT NOT NULL,
         Purpose NVARCHAR(24) NOT NULL,
+        TargetEmail NVARCHAR(255) NULL,
         CodeHash NVARCHAR(255) NOT NULL,
         CreatedAt DATETIME2(0) NOT NULL,
         ExpiresAt DATETIME2(0) NOT NULL,
@@ -119,5 +131,9 @@ BEGIN
     );
     CREATE INDEX IX_OneTimeCodes_UserPurposeCreated
         ON dbo.OneTimeCodes(UserId, Purpose, CreatedAt DESC);
+END;
+ELSE IF COL_LENGTH(N'dbo.OneTimeCodes', N'TargetEmail') IS NULL
+BEGIN
+    ALTER TABLE dbo.OneTimeCodes ADD TargetEmail NVARCHAR(255) NULL;
 END;
 GO

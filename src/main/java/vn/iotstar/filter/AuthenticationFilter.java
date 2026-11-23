@@ -40,8 +40,10 @@ public class AuthenticationFilter implements Filter {
 
         String contextPath = request.getContextPath();
         String path = request.getRequestURI().substring(contextPath.length());
-        if ((path.startsWith("/admin/category") || isVideoManagementPath(path)) && !isLoggedIn(request)) {
-            String next = path.startsWith("/video/") ? "video" : "category";
+        if ((path.startsWith("/admin/category") || isVideoManagementPath(path)
+                || path.equals("/profile")) && !isLoggedIn(request)) {
+            String next = path.equals("/profile") ? "profile"
+                    : path.startsWith("/video/") ? "video" : "category";
             response.sendRedirect(contextPath + "/login?next=" + next);
             return;
         }

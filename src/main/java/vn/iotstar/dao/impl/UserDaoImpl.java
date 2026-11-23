@@ -120,6 +120,7 @@ public class UserDaoImpl implements UserDao {
             EmailOtp otp = new EmailOtp();
             otp.setUser(user);
             otp.setPurpose(purpose);
+            otp.setTargetEmail(null);
             otp.setCodeHash(codeHash);
             otp.setCreatedAt(now);
             otp.setExpiresAt(expiresAt);
@@ -157,6 +158,115 @@ public class UserDaoImpl implements UserDao {
             if (validation != OtpResult.SUCCESS) return validation;
             if (!otp.getUser().isActive()) return OtpResult.INVALID;
             otp.getUser().setPasswordHash(passwordHash);
+            otp.setConsumed(true);
+            return OtpResult.SUCCESS;
+        });
+    }
+
+    @Override
+    public String updateProfile(int userId, String fullName, String phone,
+                                String profileImageUrl, String cloudinaryPublicId) throws SQLException {
+        return JpaSupport.write(entityManager -> {
+            User user = entityManager.find(User.class, userId);
+            if (user == null) throw new IllegalArgumentException("The account no longer exists.");
+            String previousPublicId = null;
+            user.setFullName(fullName);
+            user.setPhone(phone);
+            if (profileImageUrl != null && cloudinaryPublicId != null) {
+                previousPublicId = user.getCloudinaryPublicId();
+                user.setProfileImageUrl(profileImageUrl);
+                user.setCloudinaryPublicId(cloudinaryPublicId);
+            }
+            return previousPublicId;
+        });
+    }
+
+    @Override
+    public boolean requestEmailChangeOtp(int userId, String targetEmail, String codeHash,
+                                         LocalDateTime now, LocalDateTime expiresAt) throws SQLException {
+        return JpaSupport.write(entityManager -> {
+            User user = entityManager.find(User.class, userId);
+            if (user == null || !user.isActive()) return false;
+
+            Long existingEmail = entityManager.createQuery(
+                            "SELECT COUNT(u) FROM User u WHERE u.email = :email", Long.class)
+                    .setParameter("email", targetEmail)
+                    .getSingleResult();
+            if (existingEmail > 0) return false;
+
+            Long recentCount = entityManager.createQuery(
+                            "SELECT COUNT(o) FROM EmailOtp o WHERE o.user.id = :userId "
+                                    + "AND o.purpose = :purpose AND o.createdAt >= :since", Long.class)
+                    .setParameter("userId", userId)
+                    .setParameter("purpose", "EMAIL_CHANGE")
+                    .setParameter("since", now.minusHours(1))
+                    .getSingleResult();
+            if (recentCount >= 5) return false;
+
+            List<EmailOtp> latest = entityManager.createQuery(
+                            "SELECT o FROM EmailOtp o WHERE o.user.id = :userId "
+                                    + "AND o.purpose = :purpose ORDER BY o.createdAt DESC, o.id DESC", EmailOtp.class)
+                    .setParameter("userId", userId)
+                    .setParameter("purpose", "EMAIL_CHANGE")
+                    .setMaxResults(1)
+                    .getResultList();
+            if (!latest.isEmpty() && latest.get(0).getCreatedAt().isAfter(now.minusSeconds(60))) return false;
+
+            entityManager.createQuery("DELETE FROM EmailOtp o WHERE o.user = :user AND o.createdAt < :cutoff")
+                    .setParameter("user", user)
+                    .setParameter("cutoff", now.minusDays(2))
+                    .executeUpdate();
+
+            user.setPendingEmail(targetEmail);
+            EmailOtp otp = new EmailOtp();
+            otp.setUser(user);
+            otp.setPurpose("EMAIL_CHANGE");
+            otp.setTargetEmail(targetEmail);
+            otp.setCodeHash(codeHash);
+            otp.setCreatedAt(now);
+            otp.setExpiresAt(expiresAt);
+            entityManager.persist(otp);
+            return true;
+        });
+    }
+
+    @Override
+    public OtpResult changeEmailWithOtp(int userId, String code, LocalDateTime now) throws SQLException {
+        return JpaSupport.write(entityManager -> {
+            List<EmailOtp> matches = entityManager.createQuery(
+                            "SELECT o FROM EmailOtp o JOIN FETCH o.user u WHERE u.id = :userId "
+                                    + "AND o.purpose = :purpose ORDER BY o.createdAt DESC, o.id DESC", EmailOtp.class)
+                    .setParameter("userId", userId)
+                    .setParameter("purpose", "EMAIL_CHANGE")
+                    .setMaxResults(1)
+                    .getResultList();
+            if (matches.isEmpty()) return OtpResult.NOT_FOUND;
+
+            EmailOtp otp = matches.get(0);
+            User user = otp.getUser();
+            if (otp.isConsumed()) return OtpResult.ALREADY_DONE;
+            OtpResult validation = validateCode(otp, code, now);
+            if (validation != OtpResult.SUCCESS) return validation;
+            String targetEmail = otp.getTargetEmail();
+            if (targetEmail == null || targetEmail.isBlank()
+                    || !targetEmail.equals(user.getPendingEmail())) {
+                otp.setConsumed(true);
+                return OtpResult.NOT_FOUND;
+            }
+
+            Long existingEmail = entityManager.createQuery(
+                            "SELECT COUNT(u) FROM User u WHERE u.email = :email AND u.id <> :userId", Long.class)
+                    .setParameter("email", targetEmail)
+                    .setParameter("userId", userId)
+                    .getSingleResult();
+            if (existingEmail > 0) {
+                user.setPendingEmail(null);
+                otp.setConsumed(true);
+                return OtpResult.EMAIL_TAKEN;
+            }
+
+            user.setEmail(targetEmail);
+            user.setPendingEmail(null);
             otp.setConsumed(true);
             return OtpResult.SUCCESS;
         });

@@ -30,6 +30,9 @@ public class EmailOtp implements Serializable {
     @Column(name = "Purpose", nullable = false, length = 24)
     private String purpose;
 
+    @Column(name = "TargetEmail", length = 255)
+    private String targetEmail;
+
     @Column(name = "CodeHash", nullable = false, length = 255)
     private String codeHash;
 
@@ -55,6 +58,8 @@ public class EmailOtp implements Serializable {
     public void setUser(User user) { this.user = user; }
     public String getPurpose() { return purpose; }
     public void setPurpose(String purpose) { this.purpose = purpose; }
+    public String getTargetEmail() { return targetEmail; }
+    public void setTargetEmail(String targetEmail) { this.targetEmail = targetEmail; }
     public String getCodeHash() { return codeHash; }
     public void setCodeHash(String codeHash) { this.codeHash = codeHash; }
     public LocalDateTime getCreatedAt() { return createdAt; }

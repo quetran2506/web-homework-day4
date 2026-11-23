@@ -8,7 +8,7 @@
     <artifactId>web-homework-day4</artifactId>
     <version>1.0.0</version>
     <packaging>war</packaging>
-    <name>Web Programming Homework Day 4 - SiteMesh and Validation</name>
+    <name>Web Programming Homework Day 4 - SiteMesh, Validation, and Profile</name>
 
     <properties>
         <maven.compiler.release>17</maven.compiler.release>
@@ -72,6 +72,11 @@
             <groupId>org.eclipse.angus</groupId>
             <artifactId>angus-mail</artifactId>
             <version>2.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http5</artifactId>
+            <version>2.6.0</version>
         </dependency>
     </dependencies>
 

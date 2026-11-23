@@ -48,8 +48,11 @@ public final class MailSender {
         message.setFrom(new InternetAddress(from));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to, false));
         message.setSubject("Mã OTP cho Web Homework", StandardCharsets.UTF_8.name());
-        String explanation = "ACTIVATION".equals(purpose)
-                ? "để kích hoạt tài khoản" : "để đặt lại mật khẩu";
+        String explanation = switch (purpose) {
+            case "ACTIVATION" -> "để kích hoạt tài khoản";
+            case "EMAIL_CHANGE" -> "để xác nhận thay đổi email";
+            default -> "để đặt lại mật khẩu";
+        };
         message.setText("Xin chào " + safeName(fullName) + ",\n\n"
                 + "Mã OTP " + explanation + " của bạn là: " + code + "\n"
                 + "Mã có hiệu lực trong 10 phút và chỉ dùng được một lần.\n\n"

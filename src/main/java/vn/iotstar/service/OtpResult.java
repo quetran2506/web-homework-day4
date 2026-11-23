@@ -6,5 +6,6 @@ public enum OtpResult {
     EXPIRED,
     TOO_MANY_ATTEMPTS,
     ALREADY_DONE,
+    EMAIL_TAKEN,
     NOT_FOUND
 }

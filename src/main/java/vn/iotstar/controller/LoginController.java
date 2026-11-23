@@ -95,6 +95,7 @@ public class LoginController extends HttpServlet {
     private String destination(String next) {
         if ("category".equals(next)) return "/admin/category/list";
         if ("video".equals(next)) return "/video/manage";
+        if ("profile".equals(next)) return "/profile";
         return "/home";
     }
 }

@@ -20,4 +20,9 @@ public interface UserDao {
     OtpResult activateWithOtp(String email, String code, LocalDateTime now) throws SQLException;
     OtpResult resetPasswordWithOtp(String email, String code, String passwordHash,
                                    LocalDateTime now) throws SQLException;
+    String updateProfile(int userId, String fullName, String phone,
+                         String profileImageUrl, String cloudinaryPublicId) throws SQLException;
+    boolean requestEmailChangeOtp(int userId, String targetEmail, String codeHash,
+                                  LocalDateTime now, LocalDateTime expiresAt) throws SQLException;
+    OtpResult changeEmailWithOtp(int userId, String code, LocalDateTime now) throws SQLException;
 }

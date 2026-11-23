@@ -7,12 +7,14 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 import java.security.SecureRandom;
+import java.util.regex.Pattern;
 import jakarta.mail.MessagingException;
 import vn.iotstar.dao.UserDao;
 import vn.iotstar.dao.impl.UserDaoImpl;
 import vn.iotstar.entity.User;
 import vn.iotstar.service.OtpRequestStatus;
 import vn.iotstar.service.OtpResult;
+import vn.iotstar.service.EmailChangeRequestStatus;
 import vn.iotstar.service.RegistrationStatus;
 import vn.iotstar.service.UserService;
 import vn.iotstar.util.MailSender;
@@ -23,6 +25,7 @@ public class UserServiceImpl implements UserService {
     private static final int REMEMBER_DAYS = 30;
     private static final int OTP_LIFETIME_MINUTES = 10;
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final Pattern EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     private final UserDao userDao;
 
     public UserServiceImpl() {
@@ -86,6 +89,43 @@ public class UserServiceImpl implements UserService {
     public OtpResult resetPassword(String email, String code, String password) throws SQLException {
         return userDao.resetPasswordWithOtp(normalizeEmail(email), cleanCode(code),
                 PasswordHasher.hashPassword(password), now());
+    }
+
+    @Override
+    public EmailChangeRequestStatus requestEmailChange(User user, String newEmail) throws SQLException {
+        if (user == null || user.getId() < 1) return EmailChangeRequestStatus.NOT_FOUND;
+        String normalizedEmail = normalizeEmail(newEmail);
+        if (normalizedEmail.length() > 255 || !EMAIL.matcher(normalizedEmail).matches()) {
+            return EmailChangeRequestStatus.INVALID_EMAIL;
+        }
+        if (normalizedEmail.equals(normalizeEmail(user.getEmail()))) {
+            return EmailChangeRequestStatus.SAME_EMAIL;
+        }
+        if (userDao.existsByEmail(normalizedEmail)) return EmailChangeRequestStatus.EMAIL_TAKEN;
+
+        String code = String.format(Locale.ROOT, "%06d", RANDOM.nextInt(1_000_000));
+        LocalDateTime created = now();
+        boolean saved = userDao.requestEmailChangeOtp(user.getId(), normalizedEmail,
+                PasswordHasher.hashPassword(code), created, created.plusMinutes(OTP_LIFETIME_MINUTES));
+        if (!saved) return EmailChangeRequestStatus.RATE_LIMITED;
+        try {
+            MailSender.sendOtp(normalizedEmail, user.getFullName(), "EMAIL_CHANGE", code);
+            return EmailChangeRequestStatus.SENT;
+        } catch (MessagingException ex) {
+            return EmailChangeRequestStatus.EMAIL_FAILED;
+        }
+    }
+
+    @Override
+    public OtpResult confirmEmailChange(User user, String code) throws SQLException {
+        if (user == null || user.getId() < 1) return OtpResult.NOT_FOUND;
+        return userDao.changeEmailWithOtp(user.getId(), cleanCode(code), now());
+    }
+
+    @Override
+    public String updateProfile(int userId, String fullName, String phone,
+                                String profileImageUrl, String cloudinaryPublicId) throws SQLException {
+        return userDao.updateProfile(userId, fullName, phone, profileImageUrl, cloudinaryPublicId);
     }
 
     @Override

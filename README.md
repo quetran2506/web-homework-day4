@@ -1,17 +1,19 @@
-# Web Homework Day 4 - SiteMesh, Bootstrap, and Form Validation
+# Web Homework Day 4 - SiteMesh, Validation, and User Profiles
 
-The project continues the Day 3 homework. It includes account activation by email OTP, hashed-password login, logout, forgot-password OTP, Video CRUD, multipart MP4 upload, public video playback, and pagination.
+The project continues the Day 3 homework. It includes account activation by email OTP, hashed-password login, logout, forgot-password OTP, Video CRUD, multipart MP4 upload, public video playback, pagination, and the Day 4 profile features.
 
 ## Day 4 requirements
 
 - SiteMesh 3.2.1 applies one shared Bootstrap 5.3.9 decorator to JSP pages; the shared template provides responsive navigation and a footer.
 - Bootstrap client-side validation with inline feedback and server-side validation for login, registration, forgot password, Category insert/edit, and Video insert/edit.
+- Signed-in users can update their name and phone, upload a profile image to Cloudinary, and change email only after confirming an OTP sent to the new address.
 
 ## Technology
 
 - Java 17, Maven, Jakarta Servlet 6.0 / JSP 3.1, Tomcat 10.1.
 - Hibernate ORM with JPA and Microsoft SQL Server.
 - Jakarta Mail (Eclipse Angus) for SMTP OTP delivery.
+- Cloudinary Java SDK for signed server-side profile image uploads.
 - Servlet `@MultipartConfig` for MP4 upload, following the supplied Servlet multipart guide.
 
 ## SQL Server setup
@@ -42,6 +44,19 @@ $env:MAIL_PASSWORD = [System.Net.NetworkCredential]::new('', $secureMailPassword
 $env:MAIL_FROM = $env:MAIL_USERNAME
 ```
 
+## Cloudinary profile images
+
+Create a Cloudinary account and copy the cloud name, API key, and API secret from its Dashboard. Set them in the same PowerShell terminal used to start Tomcat; do not commit these values:
+
+```powershell
+$env:CLOUDINARY_CLOUD_NAME = 'your-cloud-name'
+$env:CLOUDINARY_API_KEY = 'your-api-key'
+$secureCloudinarySecret = Read-Host 'Cloudinary API secret' -AsSecureString
+$env:CLOUDINARY_API_SECRET = [System.Net.NetworkCredential]::new('', $secureCloudinarySecret).Password
+```
+
+The profile page is at `/profile`. The uploaded image is stored in the Cloudinary folder `web-homework-day4/profile-images`; only its secure URL and public ID are saved in the user row. Replacing a profile image removes the previous Cloudinary asset after the database update succeeds.
+
 OTP codes expire after 10 minutes, are stored only as password hashes, can be used once, and allow at most five attempts. The application allows one new code per minute and five requests per hour for each email and purpose. These environment values apply only to that terminal session; keep the secrets out of Git.
 
 ## Build and run on Tomcat
@@ -66,6 +81,7 @@ Open [http://localhost:8080/web-homework-day4/](http://localhost:8080/web-homewo
 
 - `/register`, `/activation`: register an account and activate it using the email OTP.
 - `/login`, `/logout`: password-hash verification, session login, optional remember-me cookie, and logout.
+- `/profile`: update full name, phone, Cloudinary profile image, and email after OTP confirmation.
 - `/forgot-password`, `/reset-password`: request an email code and set a new password.
 - `/home`: newest 10 public videos.
 - `/video`: public videos, six per page. Add `?userId=ID` to filter to one user's videos.

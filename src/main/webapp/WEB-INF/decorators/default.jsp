@@ -32,6 +32,7 @@
                     <li class="nav-item"><a class="nav-link" href="${videoUrl}">Video</a></li>
                     <c:choose>
                         <c:when test="${sessionScope.account != null}">
+                            <li class="nav-item"><c:url value="/profile" var="profileUrl" /><a class="nav-link" href="${profileUrl}">Hồ sơ</a></li>
                             <li class="nav-item"><c:url value="/video/manage" var="manageVideosUrl" /><a class="nav-link" href="${manageVideosUrl}">Quản lý video</a></li>
                             <li class="nav-item"><span class="navbar-text px-lg-2 text-nowrap">Xin ch&#224;o, <c:out value="${sessionScope.account.fullName}" /></span></li>
                             <li class="nav-item">
